@@ -58,54 +58,71 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     public Video save(Video video, MultipartFile file) {
-        // original file name
-
         try {
-
-
             String filename = file.getOriginalFilename();
             String contentType = file.getContentType();
             InputStream inputStream = file.getInputStream();
 
-
-            // file path
+            // Save uploaded file temporarily
             String cleanFileName = StringUtils.cleanPath(filename);
+            Path tempPath = Paths.get(DIR, "temp_" + cleanFileName);
+            Files.copy(inputStream, tempPath, StandardCopyOption.REPLACE_EXISTING);
 
+            // Concatenate with startup animation BEFORE storing
+            String finalOutputPath = attachStartupAnimation(tempPath.toString(), cleanFileName);
 
-            //folder path : create
-
-            String cleanFolder = StringUtils.cleanPath(DIR);
-
-
-            // folder path with  filename
-            Path path = Paths.get(cleanFolder, cleanFileName);
-
-            System.out.println(contentType);
-            System.out.println(path);
-
-            // copy file to the folder
-            Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
-
-
-            // video meta data
-
+            // Save metadata
             video.setContentType(contentType);
-            video.setFilePath(path.toString());
+            video.setFilePath(finalOutputPath);
             Video savedVideo = videoRepository.save(video);
-            //processing video
+
+            // Now process the concatenated video
             processVideo(savedVideo.getVideoId());
 
-            //delete actual video file and database entry  if exception
+            // Delete temp uploaded file (optional)
+            Files.deleteIfExists(tempPath);
 
-            // metadata save
             return savedVideo;
 
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException("Error in processing video ");
         }
+    }
+
+    public String attachStartupAnimation(String filePath, String originalFileName) {
+        try {
+            String animationPath = "videos/netflix-intro.mp4";
+            String outputDir = DIR; // store final video in main dir
+            Files.createDirectories(Paths.get(outputDir));
+
+            String outputFilePath = Paths.get(outputDir, originalFileName).toString();
 
 
+            String ffmpegCmd = String.format(
+                    "ffmpeg -i \"%s\" -i \"%s\" -filter_complex " +
+                            "\"[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2[v0]; " +
+                            "[1:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-ih)/2:(oh-ih)/2[v1]; " +
+                            "[v0][0:a][v1][1:a]concat=n=2:v=1:a=1[outv][outa]\" " +
+                            "-map \"[outv]\" -map \"[outa]\" -c:v libx264 -crf 23 -preset veryfast -c:a aac \"%s\"",
+                    animationPath, filePath, outputFilePath
+            );
+
+            ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c", ffmpegCmd);
+            processBuilder.inheritIO();
+            Process process = processBuilder.start();
+            int exitCode = process.waitFor();
+
+            if (exitCode != 0) {
+                throw new RuntimeException("Failed to concatenate the startup animation with the video!");
+            }
+
+            System.out.println("Startup animation attached successfully: " + outputFilePath);
+            return outputFilePath;
+
+        } catch (IOException | InterruptedException ex) {
+            throw new RuntimeException("Error while attaching startup animation!", ex);
+        }
     }
 
 
@@ -168,7 +185,6 @@ public class VideoServiceImpl implements VideoService {
 //                    .append("-f hls -hls_time 10 -hls_list_size 0 ")
 //                    .append("-hls_segment_filename \"").append(HSL_DIR).append(videoId).append("/v%v/fileSequence%d.ts\" ")
 //                    .append("\"").append(HSL_DIR).append(videoId).append("/v%v/prog_index.m3u8\"");
-
 
             System.out.println(ffmpegCmd);
             //file this command

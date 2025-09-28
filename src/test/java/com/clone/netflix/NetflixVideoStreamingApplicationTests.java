@@ -5,16 +5,22 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.io.IOException;
+
 @SpringBootTest
 class NetflixVideoStreamingApplicationTests {
 
 	@Autowired
 	VideoService videoService;
 
+
+
 	@Test
-	void contextLoads() {
+	void contextLoads() throws IOException, InterruptedException {
 
 //		videoService.processVideo("499253fc-78aa-48e1-9d20-06130f550568",null);
+
+//        videoServiceTest.generateHlsStreams("124-1335-1241-124124", "/Users/kavinkumarbaskar/Downloads/benjamin_button.mp4");
 
 	}
 

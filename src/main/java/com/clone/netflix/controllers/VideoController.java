@@ -5,10 +5,12 @@ import com.clone.netflix.entities.Video;
 import com.clone.netflix.playload.CustomMessage;
 import com.clone.netflix.services.VideoService;
 
+import com.clone.netflix.services.VideoServiceTest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -33,12 +35,14 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/videos")
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000"})
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000", "*"})
 public class VideoController {
-    private VideoService videoService;
+    private final VideoService videoService;
+    private final VideoServiceTest videoServiceTest;
 
     public VideoController(VideoService videoService) {
         this.videoService = videoService;
+        this.videoServiceTest = new VideoServiceTest();
     }
 
     // video upload
@@ -196,8 +200,9 @@ public class VideoController {
             @PathVariable String videoId
     ) {
 
+        String filePath = "/Users/kavinkumarbaskar/project/netflix/data/videos_hls";
 //        creating path
-        Path path = Paths.get(HSL_DIR, videoId, "master.m3u8");
+        Path path = Paths.get(filePath, videoId, "master.m3u8");
 
         System.out.println(path);
 
@@ -241,6 +246,46 @@ public class VideoController {
                 .body(resource);
 
     }
+
+    @PostMapping("/{videoId}/generate-hls")
+    public ResponseEntity<String> generateHls(@PathVariable String videoId, @RequestParam String videoPath) {
+        try {
+            videoServiceTest.generateAdaptiveHls(videoId, videoPath);
+            return ResponseEntity.ok("HLS streams generated successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error generating HLS streams: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("{videoId}/{qualityLevel}/playlist.m3u8")
+    public ResponseEntity<Resource> getQualityPlaylist(@PathVariable String videoId, @PathVariable int qualityLevel) {
+        try {
+            String filePath = "/Users/kavinkumarbaskar/project/netflix/data/videos_hls/";
+            String playlistPath = filePath + videoId + "/" + qualityLevel + "/playlist.m3u8";
+            Resource resource = new UrlResource(Paths.get(playlistPath).toUri());
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_TYPE, "application/vnd.apple.mpegurl")
+                    .body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("{videoId}/{qualityLevel}/{segmentName}")
+    public ResponseEntity<Resource> getSegment(@PathVariable String videoId, @PathVariable int qualityLevel, @PathVariable String segmentName) {
+        try {
+            String filePath = "/Users/kavinkumarbaskar/project/netflix/data/videos_hls/";
+            String segmentPath = filePath + videoId + "/" + qualityLevel + "/" + segmentName;
+            Resource resource = new UrlResource(Paths.get(segmentPath).toUri());
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_TYPE, "video/MP2T")
+                    .body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
 
     @GetMapping("/test")
     public String test() {

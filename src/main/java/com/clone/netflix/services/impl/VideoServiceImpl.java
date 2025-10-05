@@ -24,8 +24,8 @@ public class VideoServiceImpl implements VideoService {
     @Value("${files.video}")
     String DIR;
 
-    @Value("${file.video.hsl}")
-    String HSL_DIR;
+    @Value("${file.video.hls}")
+    String HLS_DIR;
 
 
     private VideoRepository videoRepository;
@@ -42,7 +42,7 @@ public class VideoServiceImpl implements VideoService {
 
 
         try {
-            Files.createDirectories(Paths.get(HSL_DIR));
+            Files.createDirectories(Paths.get(HLS_DIR));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -152,9 +152,9 @@ public class VideoServiceImpl implements VideoService {
         Path videoPath = Paths.get(filePath);
 
 
-//        String output360p = HSL_DIR + videoId + "/360p/";
-//        String output720p = HSL_DIR + videoId + "/720p/";
-//        String output1080p = HSL_DIR + videoId + "/1080p/";
+//        String output360p = HLS_DIR + videoId + "/360p/";
+//        String output720p = HLS_DIR + videoId + "/720p/";
+//        String output1080p = HLS_DIR + videoId + "/1080p/";
 
         try {
 //            Files.createDirectories(Paths.get(output360p));
@@ -162,7 +162,7 @@ public class VideoServiceImpl implements VideoService {
 //            Files.createDirectories(Paths.get(output1080p));
 
             // ffmpeg command
-            Path outputPath = Paths.get(HSL_DIR, videoId);
+            Path outputPath = Paths.get(HLS_DIR, videoId);
 
             Files.createDirectories(outputPath);
 
@@ -181,10 +181,10 @@ public class VideoServiceImpl implements VideoService {
 //                    .append("-map 0:v -map 0:a -s:v:1 1280x720 -b:v:1 2800k ")
 //                    .append("-map 0:v -map 0:a -s:v:2 1920x1080 -b:v:2 5000k ")
 //                    .append("-var_stream_map \"v:0,a:0 v:1,a:0 v:2,a:0\" ")
-//                    .append("-master_pl_name ").append(HSL_DIR).append(videoId).append("/master.m3u8 ")
+//                    .append("-master_pl_name ").append(HLS_DIR).append(videoId).append("/master.m3u8 ")
 //                    .append("-f hls -hls_time 10 -hls_list_size 0 ")
-//                    .append("-hls_segment_filename \"").append(HSL_DIR).append(videoId).append("/v%v/fileSequence%d.ts\" ")
-//                    .append("\"").append(HSL_DIR).append(videoId).append("/v%v/prog_index.m3u8\"");
+//                    .append("-hls_segment_filename \"").append(HLS_DIR).append(videoId).append("/v%v/fileSequence%d.ts\" ")
+//                    .append("\"").append(HLS_DIR).append(videoId).append("/v%v/prog_index.m3u8\"");
 
             System.out.println(ffmpegCmd);
             //file this command

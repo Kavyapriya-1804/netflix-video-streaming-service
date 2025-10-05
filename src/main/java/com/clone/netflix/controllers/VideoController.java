@@ -192,8 +192,8 @@ public class VideoController {
 
     //master.m2u8 file
 
-    @Value("${file.video.hsl}")
-    private String HSL_DIR;
+    @Value("${file.video.hls}")
+    private String HLS_DIR;
 
     @GetMapping("/{videoId}/master.m3u8")
     public ResponseEntity<Resource> serverMasterFile(
@@ -231,7 +231,7 @@ public class VideoController {
     ) {
 
         // create path for segment
-        Path path = Paths.get(HSL_DIR, videoId, segment + ".ts");
+        Path path = Paths.get(HLS_DIR, videoId, segment + ".ts");
         if (!Files.exists(path)) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }

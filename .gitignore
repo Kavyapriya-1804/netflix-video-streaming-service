@@ -1,6 +1,6 @@
 target/
 videos
-videos_hls
+videos_hls_old
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/

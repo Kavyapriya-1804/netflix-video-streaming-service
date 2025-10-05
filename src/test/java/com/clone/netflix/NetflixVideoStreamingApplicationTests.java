@@ -20,7 +20,7 @@ class NetflixVideoStreamingApplicationTests {
 
 //		videoService.processVideo("499253fc-78aa-48e1-9d20-06130f550568",null);
 
-//        videoServiceTest.generateHlsStreams("124-1335-1241-124124", "/Users/kavinkumarbaskar/Downloads/benjamin_button.mp4");
+//        videoService.generateHlsStreams("124-1335-1241-124124", "/Users/kavinkumarbaskar/Downloads/benjamin_button.mp4");
 
 	}
 
